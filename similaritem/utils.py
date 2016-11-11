@@ -1,5 +1,6 @@
 import sys
 import re
+import random
 
 
 def create_shingles_from_file(filepath, shingle_size):
@@ -29,3 +30,14 @@ def create_shingles_signature(hashed_shingles, hash_funcs):
         signature = [min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, signature)]
 
     return signature
+
+
+def generate_signature_functions(n):
+
+    modulus_op = random.randint(2, (1 << 4) - 1)
+
+    hash_funcs = []
+    for _ in range(n):
+        hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % modulus_op)
+
+    return hash_funcs

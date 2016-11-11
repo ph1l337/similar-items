@@ -49,20 +49,8 @@ def create_signatures_from_shingles(documents_hashes, signature_size):
 
     for doc_id, doc_shingle_hashes in documents_hashes.items():
         documents_signatures[doc_id] = utils.create_shingles_signature(doc_shingle_hashes, hash_funcs)
-        # for shingle_hash in doc_shingle_hashes[doc_id]:
-        #     signature = [min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, documents_signatures[doc_id])]
-        #     documents_signatures[doc_id] = signature
 
     return documents_signatures
-
-
-def generate_signature_functions(n):
-
-    hash_funcs = []
-    for _ in range(n):
-        hash_funcs.append(lambda x: random.randint(1, 100)*x + random.randint(1, 100))
-
-    return hash_funcs
 
 
 def create_shingles_from_files(files, shingle_size):
