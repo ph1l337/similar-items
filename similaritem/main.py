@@ -1,4 +1,9 @@
 import re
+import sys
+import os
+import os.path
+import random
+import collections
 
 
 def usage():
@@ -31,10 +36,28 @@ def hash_documents_shingles(documents):
     return shingles
 
 
-def make_shingle_signatures(documents_shingles):
+#TODO: sort documents hashes
+def create_signatures_from_shingles(documents_hashes, signature_size):
 
-    for k, shingles in documents_shingles:
-        pass
+    documents_signatures = collections.defaultdict(lambda x: [sys.maxsize for _ in range(signature_size)])
+    hash_funcs = generate_signature_functions(signature_size)
+
+    for doc_id, hashes in documents_hashes.items():
+
+        for shingle_hash in hashes[doc_id]:
+            signature = [min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, documents_signatures[doc_id])]
+            documents_signatures[doc_id] = signature
+
+    return documents_signatures
+
+
+def generate_signature_functions(n):
+
+    hash_funcs = []
+    for i in range(n):
+        hash_funcs.append(lambda x: random.randint(1, 100)*x + random.randint(1, 100))
+
+    return hash_funcs
 
 
 def create_shingles_from_files(files, shingle_size):
@@ -58,10 +81,6 @@ def create_shingles_from_files(files, shingle_size):
 
 
 if __name__ == '__main__':
-
-    import sys
-    import os
-    import os.path
 
     argc = len(sys.argv)
     if argc < 3:
