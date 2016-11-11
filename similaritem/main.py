@@ -14,31 +14,28 @@ def usage():
 
 
 def main(path, shingle_size=9, threshold=.9):
-
-    files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(file))
+    files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path,file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
     documents_hashes = hash_documents_shingles(documents_shingles)
+    jaccard_similarities = compare_sets(documents_hashes)
 
 
 def hash_documents_shingles(documents):
-
     maxi = (1 << 32) - 1
-    shingles = {}
+    document_hashes = dict()
 
     for k, shingles in documents.items():
-        shingles[k] = [(hash(shingle) & maxi) for shingle in shingles]
+        document_hashes[k] = {(hash(shingle) & maxi) for shingle in shingles}
 
-    return shingles
+    return document_hashes
 
 
 def make_shingle_signatures(documents_shingles):
-
     for k, shingles in documents_shingles:
         pass
 
 
 def create_shingles_from_files(files, shingle_size):
-
     documents = {}
     for file in files:
         shingles = set()
@@ -55,6 +52,24 @@ def create_shingles_from_files(files, shingle_size):
         documents[file] = shingles
 
     return documents
+
+
+def compare_sets(documents_hashes):
+    keys = list(documents_hashes.keys())
+    pairs = []
+    jaccard_similarities = []
+    for i in range(len(keys)):
+        for j in range(i+1, len(keys)):
+            pairs.append((keys[i], keys[j]))
+
+    for pair in pairs:
+        jaccard_similarities.append((pair, calc_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
+
+    return jaccard_similarities
+
+
+def calc_jaccard_simularity(set1, set2):
+    return len(set1.intersection(set2)) / len(set1.union(set2))
 
 
 if __name__ == '__main__':
@@ -78,20 +93,20 @@ if __name__ == '__main__':
             if argc < i + 1:
                 usage()
                 raise RuntimeError('Missing parameter: -k')
-            shingle_size = int(sys.argv[i+1])
+            shingle_size = int(sys.argv[i + 1])
 
         elif sys.argv[i] == '-t':
             if argc < i + 1:
                 usage()
                 raise RuntimeError('Missing parameter: -t')
 
-            threshold = float(sys.argv[i+1])
+            threshold = float(sys.argv[i + 1])
         elif sys.argv[i] == '-path':
             if argc < i + 1:
                 usage()
                 raise RuntimeError('Missing parameter: -path')
 
-            path = sys.argv[i+1]
+            path = sys.argv[i + 1]
 
             if not os.path.isdir(path):
                 usage()
@@ -105,5 +120,3 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     pass
-
-
