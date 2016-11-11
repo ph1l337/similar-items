@@ -23,7 +23,7 @@ def hash_shingles(shingles, maxi):
     return {(hash(shingle) & maxi) for shingle in shingles}
 
 
-def create_shingles_signature(hashed_shingles, hash_funcs):
+def create_min_hash_signature(hashed_shingles, hash_funcs):
     signature = [sys.maxsize for _ in range(len(hash_funcs))]
     for shingle_hash in hashed_shingles:
         signature = [min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, signature)]

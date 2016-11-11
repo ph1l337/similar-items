@@ -45,10 +45,10 @@ def hash_documents_shingles(documents):
 def create_signatures_from_shingles(documents_hashes, signature_size):
 
     documents_signatures = collections.defaultdict(lambda x: [sys.maxsize for _ in range(signature_size)])
-    hash_funcs = generate_signature_functions(signature_size)
+    min_hash_funcs = utils.generate_signature_functions(signature_size)
 
     for doc_id, doc_shingle_hashes in documents_hashes.items():
-        documents_signatures[doc_id] = utils.create_shingles_signature(doc_shingle_hashes, hash_funcs)
+        documents_signatures[doc_id] = utils.create_min_hash_signature(doc_shingle_hashes, min_hash_funcs)
 
     return documents_signatures
 
