@@ -33,10 +33,8 @@ def create_min_hash_signature(hashed_shingles, hash_funcs):
 
 def generate_signature_functions(n):
 
-    modulus_op = random.randint(2, (1 << 4) - 1)
-
     hash_funcs = []
     for _ in range(n):
-        hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % modulus_op)
+        hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % 919)
 
     return hash_funcs
