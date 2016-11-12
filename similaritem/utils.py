@@ -38,3 +38,27 @@ def generate_signature_functions(n):
         hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % 919)
 
     return hash_funcs
+
+
+def compute_index_measures(signature_size, threshold, high_recall=True):
+
+    b, r = 2, 1
+    n_bands, n_rows = None, None
+
+    while b <= signature_size:
+
+        if r >= signature_size:
+            b, r = b+1, 1
+
+        if b*r == signature_size:
+            t = (1.0 / b) ** (1.0 / r)
+
+            if high_recall and t < threshold:
+                n_bands, n_rows = b, r  # first pair corresponds to highest r (we don't want it too small)
+                break
+            elif not high_recall and t > threshold:
+                n_bands, n_rows = b, r  # don't break... search for highest b (we don't want it too small)
+
+        r += 1
+
+    return n_bands, n_rows
