@@ -1,6 +1,7 @@
-import sys
-import re
+import math
 import random
+import re
+import sys
 
 
 def create_shingles_from_file(filepath, shingle_size):
@@ -98,3 +99,39 @@ def check_signature_simularity(candidate_pairs, document_signatures, threshold):
             similar_docs.append(candidate_pair)
 
     return similar_docs
+
+
+def generate_primes(upper_bound):
+    """
+    Generates prime numbers until an upper-bound
+    for look up ops, sets generally perform better
+    but for memory efficiency, we should delete values from the set we no longer need
+    and dictionaries seem to fair a little better here
+
+    dict: (~0.07299045276)
+    set: (~0.07507979505)
+    :param upper_bound:
+    :return:
+    """
+    #
+    #
+
+    if upper_bound < 2:
+        return []
+
+    yield 2
+
+    vals = dict()
+
+    for i in range(3, upper_bound + 1, 2):
+        if i not in vals:  # it's marked as true
+            yield i
+            x = 0
+            j = i ** 2 + x * i
+
+            while j < upper_bound:
+                vals[j] = False
+                x += 1
+                j = i ** 2 + x * i
+        else:
+            del vals[i]
