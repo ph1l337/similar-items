@@ -3,11 +3,11 @@ import uuid
 import tempfile
 import os
 
+from similaritem import main
 from similaritem import utils
 
 
 class TestHashing(unittest.TestCase):
-
     def test_should_hash_shingles(self):
 
         from similaritem import utils
@@ -22,9 +22,7 @@ class TestHashing(unittest.TestCase):
 
 
 class TestShingling(unittest.TestCase):
-
     def test_should_create_shingles_from_single_line_file(self):
-
         text = "abc def ghi"
 
         filepath = os.path.join(tempfile.gettempdir(), str(uuid.uuid4()))
@@ -78,28 +76,36 @@ class TestShingling(unittest.TestCase):
 
 
 class TestSignaturing(unittest.TestCase):
-
     def test_should_create_signature_from_shingles(self):
+        hash_funcs = [lambda x: ( x + 1) % 5, lambda x: (3 * x + 1) % 5]
 
-        hash_funcs = [lambda x: (4*x+2) % 5, lambda x: (2*x+3) % 5]
-
-        hashed_shingles = [1, 2, 3, 4, 5]
-        expected_min_hashing = [0, 0]
+        hashed_shingles = [0, 3]
+        expected_min_hashing = (1, 0)
         signature = utils.create_min_hash_signature(hashed_shingles, hash_funcs)
         self.assertEqual(2, len(signature))
         self.assertEqual(expected_min_hashing, signature)
 
-        expected_min_hashing = [0, 1]
-        hashed_shingles = [22, 7, 14, 88, 99]
+        hashed_shingles = [2]
+        expected_min_hashing = (3, 2)
+        signature = utils.create_min_hash_signature(hashed_shingles, hash_funcs)
+        self.assertEqual(2, len(signature))
+        self.assertEqual(expected_min_hashing, signature)
+
+        hashed_shingles = [1, 3, 4]
+        expected_min_hashing = (0, 0)
+        signature = utils.create_min_hash_signature(hashed_shingles, hash_funcs)
+        self.assertEqual(2, len(signature))
+        self.assertEqual(expected_min_hashing, signature)
+
+        hashed_shingles = [0, 2, 3]
+        expected_min_hashing = (1, 0)
         signature = utils.create_min_hash_signature(hashed_shingles, hash_funcs)
         self.assertEqual(2, len(signature))
         self.assertEqual(expected_min_hashing, signature)
 
 
 class TestLocalitySensitiveHashing(unittest.TestCase):
-
     def test_should_find_lsh_params_for_high_recall(self):
-
         signature_size, threshold, high_recall = 50, 0.8, True
         bands, rows = utils.compute_index_measures(signature_size, threshold, high_recall)
         self.assertEqual(10, bands)
@@ -110,3 +116,25 @@ class TestLocalitySensitiveHashing(unittest.TestCase):
         bands, rows = utils.compute_index_measures(signature_size, threshold, high_recall)
         self.assertEqual(5, bands)
         self.assertEqual(10, rows)
+
+    def test_should_should_create_candidate_pairs(self):
+        hash_buckets = 2147483647
+        n_bands, n_rows = 2, 5
+        document_signatures = {'a': (0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                               'b': (0, 1, 2, 3, 4, 10, 11, 12, 13, 14),
+                               'c': (10, 11, 12, 13, 14, 0, 1, 2, 3, 4)}
+        expected_candidates = {('b', 'a')}
+        candidates = utils.create_lsh_candidate_pairs(document_signatures, n_rows, n_bands, hash_buckets)
+        # TODO implement test that ignores order in tuples
+        self.assertSetEqual(expected_candidates, candidates)
+
+    def test_should_find_similar_documents_from_candidate_pairs(self):
+        threshold =.8
+        document_signatures = {'a': (0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
+                               'b': (0, 1, 2, 3, 4, 10, 11, 12, 13, 14),
+                               'c': (10, 11, 12, 13, 14, 0, 1, 2, 3, 4),
+                               'd': (10, 11, 12, 13, 14, 0, 1, 2, 3, 0)}
+        candidates_pairs = {('b', 'a'), ('c', 'd')}
+        expected_similar_docs = [('c', 'd')]
+        similar_docs = utils.check_signature_simularity(candidates_pairs, document_signatures, threshold)
+        self.assertListEqual(expected_similar_docs, similar_docs)

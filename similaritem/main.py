@@ -4,10 +4,10 @@ import os.path
 import random
 import sys
 
-from . import utils
+from similaritem import utils
 
 random.seed(1786)
-HASH_DOMAIN = 2147483647  # largest 32bit unsigned-integer prime
+HASH_BUCKETS = 2147483647  # largest 32bit unsigned-integer prime
 
 
 def usage():
@@ -16,33 +16,44 @@ def usage():
     Where
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
-        - f   : is the threshold for documents signatures, so documents will be considered similar. Defaults to .8
+        - t   : is the threshold for documents signatures, so documents will be considered similar. Defaults to .8
     """
 
     print(info)
 
 
-def main(path, shingle_size=9, threshold=.8):
+def main(path, shingle_size=9, threshold=.8, signature_size=10):
     files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
-    documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_DOMAIN)
+    documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_BUCKETS)
     jaccard_similarities = compare_sets(documents_shingles_hashes)
-    print(jaccard_similarities)
+    print('The following jaccard similiarities between the k={k} k-shingles of all pairs of documents were found:\n'
+          .format(k=shingle_size) +
+          '\n'.join('{doc_a} \t - {doc_b}: \t {jaccard_sim}'
+                      .format(doc_a=pair[0][0], doc_b=pair[0][1], jaccard_sim=pair[1]) for pair in
+                      jaccard_similarities))
+
+    document_signatures = create_signatures_from_shingles(documents_shingles_hashes, signature_size)
+    n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
+    similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
+    print('Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'
+          .format(t=threshold) +
+          '\n'.join('{doc_a} \t - {doc_b}'.format(doc_a=pair[0], doc_b=pair[1]) for pair in similar_docs))
 
 
-def hash_documents_shingles(documents, hash_domain):
+def hash_documents_shingles(documents, hash_buckets):
     document_hashes = dict()
 
     for k, shingles in documents.items():
-        document_hashes[k] = utils.hash_shingles(shingles, hash_domain)
+        document_hashes[k] = utils.hash_shingles(shingles, hash_buckets)
 
     return document_hashes
 
 
-# TODO: sort documents hashes
+# TODO: sort documents hashes - why? I think there's no need
 def create_signatures_from_shingles(documents_hashes, signature_size):
     documents_signatures = {}
-    min_hash_funcs = utils.generate_hash_functions(signature_size, HASH_DOMAIN)
+    min_hash_funcs = utils.generate_hash_functions(signature_size, HASH_BUCKETS)
 
     for doc_id, doc_shingle_hashes in documents_hashes.items():
         documents_signatures[doc_id] = utils.create_min_hash_signature(doc_shingle_hashes, min_hash_funcs)
@@ -75,6 +86,14 @@ def compare_sets(documents_hashes):
 
 def compute_jaccard_simularity(set1, set2):
     return len(set1.intersection(set2)) / len(set1.union(set2))
+
+
+def find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold):
+    candidate_pairs = utils.create_lsh_candidate_pairs(document_signatures, n_rows=n_rows, n_bands=n_bands,
+                                                       hash_buckets=HASH_BUCKETS)
+    similar_docs = utils.check_signature_simularity(candidate_pairs, document_signatures, threshold)
+
+    return similar_docs
 
 
 if __name__ == '__main__':
