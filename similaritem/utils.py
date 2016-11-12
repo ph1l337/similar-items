@@ -27,9 +27,9 @@ def hash_shingles(shingles, maxi):
 def create_min_hash_signature(hashed_shingles, hash_funcs):
     signature = [sys.maxsize for _ in range(len(hash_funcs))]
     for shingle_hash in hashed_shingles:
-        signature = tuple([min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, signature)])
+        signature = [min(hfunc(shingle_hash), val) for hfunc, val in zip(hash_funcs, signature)]
 
-    return signature
+    return tuple(signature)
 
 
 def generate_hash_functions(n, hash_buckets):
@@ -80,7 +80,10 @@ def create_lsh_candidate_pairs(document_signatures, n_rows, n_bands, hash_bucket
     for candidate in candidates:
         for i in range(len(candidate)):
             for j in range(i + 1, len(candidate)):
-                candidate_pairs.add((candidate[i], candidate[j]))
+                if candidate[i] < candidate[j]:
+                    candidate_pairs.add((candidate[i], candidate[j]))
+                else:
+                    candidate_pairs.add((candidate[j], candidate[i]))
 
     return candidate_pairs
 
@@ -95,8 +98,9 @@ def check_signature_simularity(candidate_pairs, document_signatures, threshold):
         for i in range(sig_len):
             if sig_a[i] == sig_b[i]:
                 equal_positions += 1
-        if (equal_positions / sig_len) >= threshold:
-            similar_docs.append(candidate_pair)
+        similarity = float(equal_positions) / sig_len
+        if similarity >= threshold:
+            similar_docs.append((candidate_pair, similarity))
 
     return similar_docs
 

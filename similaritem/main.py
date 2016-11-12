@@ -22,7 +22,7 @@ def usage():
     print(info)
 
 
-def main(path, shingle_size=9, threshold=.8, signature_size=100):
+def main(path, shingle_size=9, threshold=.8, signature_size=10):
     files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
     documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_BUCKETS)
@@ -30,16 +30,19 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     print('The following jaccard similiarities between the k={k} k-shingles of all pairs of documents were found:\n'
           .format(k=shingle_size) +
           '\n'.join('{doc_a} \t - {doc_b}: \t {jaccard_sim}'
-                      .format(doc_a=pair[0][0], doc_b=pair[0][1], jaccard_sim=pair[1]) for pair in
-                      jaccard_similarities))
+                    .format(doc_a=pair[0][0], doc_b=pair[0][1], jaccard_sim=pair[1]) for pair in
+                    jaccard_similarities))
 
     document_signatures = create_signatures_from_shingles(documents_shingles_hashes, signature_size)
     n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
     similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
 
-    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'.format(t=threshold)
+    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'\
+        .format(t=threshold)
     if len(similar_docs) > 0:
-        lsh_out += '\n'.join('{doc_a} \t - {doc_b}'.format(doc_a=lsh_pair[0], doc_b=lsh_pair[1]) for lsh_pair in similar_docs)
+        lsh_out += '\n'.join('{doc_a} \t - {doc_b}: \t {sim}'
+                             .format(doc_a=lsh_pair[0][0], doc_b=lsh_pair[0][1], sim=lsh_pair[1]) for lsh_pair in
+                             similar_docs)
     else:
         lsh_out += 'None'
     print(lsh_out)
@@ -104,7 +107,6 @@ if __name__ == '__main__':
 
     if sys.version_info <= (3, 5):
         raise RuntimeError('Please run with python3.5 or later')
-
 
     argc = len(sys.argv)
     if argc < 3:

@@ -76,8 +76,14 @@ class TestShingling(unittest.TestCase):
 
 
 class TestSignaturing(unittest.TestCase):
+    def test_should_create_different_hash_functions(self):
+        hash_buckets = 2147483647
+        hash_functions = utils.generate_hash_functions(10, hash_buckets)
+        for function in hash_functions:
+            print(function(5))
+
     def test_should_create_signature_from_shingles(self):
-        hash_funcs = [lambda x: ( x + 1) % 5, lambda x: (3 * x + 1) % 5]
+        hash_funcs = [lambda x: (x + 1) % 5, lambda x: (3 * x + 1) % 5]
 
         hashed_shingles = [0, 3]
         expected_min_hashing = (1, 0)
@@ -129,12 +135,12 @@ class TestLocalitySensitiveHashing(unittest.TestCase):
         self.assertSetEqual(expected_candidates, candidates)
 
     def test_should_find_similar_documents_from_candidate_pairs(self):
-        threshold =.8
+        threshold = .8
         document_signatures = {'a': (0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
                                'b': (0, 1, 2, 3, 4, 10, 11, 12, 13, 14),
                                'c': (10, 11, 12, 13, 14, 0, 1, 2, 3, 4),
                                'd': (10, 11, 12, 13, 14, 0, 1, 2, 3, 0)}
-        candidates_pairs = {('b', 'a'), ('c', 'd')}
-        expected_similar_docs = [('c', 'd')]
+        candidates_pairs = {('a', 'b'), ('c', 'd')}
+        expected_similar_docs = [(('c', 'd'), 0.9)]
         similar_docs = utils.check_signature_simularity(candidates_pairs, document_signatures, threshold)
         self.assertListEqual(expected_similar_docs, similar_docs)
