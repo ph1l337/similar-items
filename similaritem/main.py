@@ -7,6 +7,7 @@ import sys
 from . import utils
 
 random.seed(1786)
+HASH_DOMAIN = 2147483647  # largest 32bit unsigned-integer prime
 
 
 def usage():
@@ -22,28 +23,26 @@ def usage():
 
 
 def main(path, shingle_size=9, threshold=.8):
-    files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path,file)))
+    files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
-    documents_shingles_hashes = hash_documents_shingles(documents_shingles)
+    documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_DOMAIN)
     jaccard_similarities = compare_sets(documents_shingles_hashes)
     print(jaccard_similarities)
 
 
-def hash_documents_shingles(documents):
-    maxi = (1 << 32) - 1
+def hash_documents_shingles(documents, hash_domain):
     document_hashes = dict()
 
     for k, shingles in documents.items():
-        document_hashes[k] = utils.hash_shingles(shingles, maxi)
+        document_hashes[k] = utils.hash_shingles(shingles, hash_domain)
 
     return document_hashes
 
 
-#TODO: sort documents hashes
+# TODO: sort documents hashes
 def create_signatures_from_shingles(documents_hashes, signature_size):
-
     documents_signatures = {}
-    min_hash_funcs = utils.generate_signature_functions(signature_size)
+    min_hash_funcs = utils.generate_hash_functions(signature_size, HASH_DOMAIN)
 
     for doc_id, doc_shingle_hashes in documents_hashes.items():
         documents_signatures[doc_id] = utils.create_min_hash_signature(doc_shingle_hashes, min_hash_funcs)
@@ -64,11 +63,12 @@ def compare_sets(documents_hashes):
     pairs = []
     jaccard_similarities = []
     for i in range(len(keys)):
-        for j in range(i+1, len(keys)):
+        for j in range(i + 1, len(keys)):
             pairs.append((keys[i], keys[j]))
 
     for pair in pairs:
-        jaccard_similarities.append((pair, compute_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
+        jaccard_similarities.append(
+            (pair, compute_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
 
     return jaccard_similarities
 

@@ -32,11 +32,11 @@ def create_min_hash_signature(hashed_shingles, hash_funcs):
     return signature
 
 
-def generate_signature_functions(n):
+def generate_hash_functions(n, hash_domain):
 
     hash_funcs = []
     for _ in range(n):
-        hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % 919)
+        hash_funcs.append(lambda x: (random.randint(1, 100)*x + random.randint(1, 100)) % hash_domain)
 
     return hash_funcs
 
