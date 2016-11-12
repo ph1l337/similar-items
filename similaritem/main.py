@@ -1,9 +1,8 @@
-import re
-import sys
+import collections
 import os
 import os.path
 import random
-import collections
+import sys
 
 from . import utils
 
@@ -16,17 +15,18 @@ def usage():
     Where
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
-        - f   : is the threshold for documents signatures, so documents will be considered similar
+        - f   : is the threshold for documents signatures, so documents will be considered similar. Defaults to .8
     """
 
     print(info)
 
 
-def main(path, shingle_size=9, threshold=.9):
+def main(path, shingle_size=9, threshold=.8):
     files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path,file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
     documents_shingles_hashes = hash_documents_shingles(documents_shingles)
     jaccard_similarities = compare_sets(documents_shingles_hashes)
+    print(jaccard_similarities)
 
 
 def hash_documents_shingles(documents):
@@ -40,11 +40,9 @@ def hash_documents_shingles(documents):
 
 
 #TODO: sort documents hashes
-
-
 def create_signatures_from_shingles(documents_hashes, signature_size):
 
-    documents_signatures = collections.defaultdict(lambda x: [sys.maxsize for _ in range(signature_size)])
+    documents_signatures = {}
     min_hash_funcs = utils.generate_signature_functions(signature_size)
 
     for doc_id, doc_shingle_hashes in documents_hashes.items():
@@ -70,12 +68,12 @@ def compare_sets(documents_hashes):
             pairs.append((keys[i], keys[j]))
 
     for pair in pairs:
-        jaccard_similarities.append((pair, calc_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
+        jaccard_similarities.append((pair, compute_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
 
     return jaccard_similarities
 
 
-def calc_jaccard_simularity(set1, set2):
+def compute_jaccard_simularity(set1, set2):
     return len(set1.intersection(set2)) / len(set1.union(set2))
 
 
@@ -120,6 +118,3 @@ if __name__ == '__main__':
             raise RuntimeError('Unknown parameter {}'.format(sys.argv[i]))
 
     main(path, shingle_size, threshold)
-
-if __name__ == '__main__':
-    pass
