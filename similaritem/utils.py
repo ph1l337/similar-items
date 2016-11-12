@@ -37,7 +37,7 @@ def generate_hash_functions(n, hash_buckets):
     for _ in range(n):
         a = random.randint(1, 100)
         b = random.randint(1, 100)
-        hash_funcs.append(lambda x: (a * x + b) % hash_buckets)
+        hash_funcs.append(lambda x, m=a, c=b: (m * x + c) % hash_buckets)
 
     return hash_funcs
 

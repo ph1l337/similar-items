@@ -79,8 +79,8 @@ class TestSignaturing(unittest.TestCase):
     def test_should_create_different_hash_functions(self):
         hash_buckets = 2147483647
         hash_functions = utils.generate_hash_functions(10, hash_buckets)
-        for function in hash_functions:
-            print(function(5))
+        hashes = {f(5) for f in hash_functions}
+        self.assertEquals(len(hashes), len(hash_functions))
 
     def test_should_create_signature_from_shingles(self):
         hash_funcs = [lambda x: (x + 1) % 5, lambda x: (3 * x + 1) % 5]
