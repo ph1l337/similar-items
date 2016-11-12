@@ -117,7 +117,7 @@ def generate_primes(upper_bound):
     #
 
     if upper_bound < 2:
-        return []
+        return
 
     yield 2
 

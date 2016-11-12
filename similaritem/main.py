@@ -4,7 +4,7 @@ import os.path
 import random
 import sys
 
-from similaritem import utils
+from . import utils
 
 random.seed(1786)
 HASH_BUCKETS = 2147483647  # largest 32bit unsigned-integer prime
@@ -22,7 +22,7 @@ def usage():
     print(info)
 
 
-def main(path, shingle_size=9, threshold=.8, signature_size=10):
+def main(path, shingle_size=9, threshold=.8, signature_size=100):
     files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
     documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_BUCKETS)
@@ -85,7 +85,7 @@ def compare_sets(documents_hashes):
 
 
 def compute_jaccard_simularity(set1, set2):
-    return len(set1.intersection(set2)) / len(set1.union(set2))
+    return float(len(set1.intersection(set2))) / len(set1.union(set2))
 
 
 def find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold):
