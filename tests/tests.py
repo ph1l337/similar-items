@@ -123,7 +123,7 @@ class TestLocalitySensitiveHashing(unittest.TestCase):
         document_signatures = {'a': (0, 1, 2, 3, 4, 5, 6, 7, 8, 9),
                                'b': (0, 1, 2, 3, 4, 10, 11, 12, 13, 14),
                                'c': (10, 11, 12, 13, 14, 0, 1, 2, 3, 4)}
-        expected_candidates = {('b', 'a')}
+        expected_candidates = {('a', 'b')}
         candidates = utils.create_lsh_candidate_pairs(document_signatures, n_rows, n_bands, hash_buckets)
         # TODO implement test that ignores order in tuples
         self.assertSetEqual(expected_candidates, candidates)

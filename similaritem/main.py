@@ -4,7 +4,7 @@ import os.path
 import random
 import sys
 
-from . import utils
+from similaritem import utils
 
 random.seed(1786)
 HASH_BUCKETS = 2147483647  # largest 32bit unsigned-integer prime
@@ -36,9 +36,13 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     document_signatures = create_signatures_from_shingles(documents_shingles_hashes, signature_size)
     n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
     similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
-    print('Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'
-          .format(t=threshold) +
-          '\n'.join('{doc_a} \t - {doc_b}'.format(doc_a=pair[0], doc_b=pair[1]) for pair in similar_docs))
+
+    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'.format(t=threshold)
+    if len(similar_docs) > 0:
+        lsh_out += '\n'.join('{doc_a} \t - {doc_b}'.format(doc_a=lsh_pair[0], doc_b=lsh_pair[1]) for lsh_pair in similar_docs)
+    else:
+        lsh_out += 'None'
+    print(lsh_out)
 
 
 def hash_documents_shingles(documents, hash_buckets):
@@ -97,6 +101,10 @@ def find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
 
 
 if __name__ == '__main__':
+
+    if sys.version_info <= (3, 5):
+        raise RuntimeError('Please run with python3.5 or later')
+
 
     argc = len(sys.argv)
     if argc < 3:
