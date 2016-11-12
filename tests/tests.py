@@ -1,9 +1,8 @@
+import os
+import tempfile
 import unittest
 import uuid
-import tempfile
-import os
 
-from similaritem import main
 from similaritem import utils
 
 
@@ -14,7 +13,7 @@ class TestHashing(unittest.TestCase):
 
         shingles = {'ab', 'bc', 'c ', ' d', 'de', 'ef', 'f ', ' g', 'gh', 'hi'}
 
-        for maxi in ((1 << 32) - 1, (1 << 4) - 1, 4):
+        for maxi in ((1 << 31) - 1, (1 << 4) - 1, 4):
             hashed_shingles = utils.hash_shingles(shingles, maxi)
 
             for shingle_hash in hashed_shingles:
@@ -142,5 +141,9 @@ class TestLocalitySensitiveHashing(unittest.TestCase):
                                'd': (10, 11, 12, 13, 14, 0, 1, 2, 3, 0)}
         candidates_pairs = {('a', 'b'), ('c', 'd')}
         expected_similar_docs = [(('c', 'd'), 0.9)]
-        similar_docs = utils.check_signature_simularity(candidates_pairs, document_signatures, threshold)
+        similar_docs = utils.check_signature_similarity(candidates_pairs, document_signatures, threshold)
         self.assertListEqual(expected_similar_docs, similar_docs)
+
+
+if __name__ == '__main__':
+    unittest.main()

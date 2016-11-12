@@ -1,4 +1,3 @@
-import collections
 import os
 import os.path
 import random
@@ -17,6 +16,7 @@ def usage():
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
         - t   : is the threshold for documents signatures, so documents will be considered similar. Defaults to .8
+        - sig : document signature size. Defaults to 100
     """
 
     print(info)
@@ -37,7 +37,7 @@ def main(path, shingle_size=9, threshold=.8, signature_size=10):
     n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
     similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
 
-    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n'\
+    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n' \
         .format(t=threshold)
     if len(similar_docs) > 0:
         lsh_out += '\n'.join('{doc_a} \t - {doc_b}: \t {sim}'
@@ -57,7 +57,6 @@ def hash_documents_shingles(documents, hash_buckets):
     return document_hashes
 
 
-# TODO: sort documents hashes - why? I think there's no need
 def create_signatures_from_shingles(documents_hashes, signature_size):
     documents_signatures = {}
     min_hash_funcs = utils.generate_hash_functions(signature_size, HASH_BUCKETS)
@@ -98,15 +97,12 @@ def compute_jaccard_simularity(set1, set2):
 def find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold):
     candidate_pairs = utils.create_lsh_candidate_pairs(document_signatures, n_rows=n_rows, n_bands=n_bands,
                                                        hash_buckets=HASH_BUCKETS)
-    similar_docs = utils.check_signature_simularity(candidate_pairs, document_signatures, threshold)
+    similar_docs = utils.check_signature_similarity(candidate_pairs, document_signatures, threshold)
 
     return similar_docs
 
 
 if __name__ == '__main__':
-
-    if sys.version_info <= (3, 5):
-        raise RuntimeError('Please run with python3.5 or later')
 
     argc = len(sys.argv)
     if argc < 3:
@@ -116,6 +112,7 @@ if __name__ == '__main__':
     path = None
     shingle_size = 9
     threshold = 0.8
+    signature_size = 100
     path = None
 
     for i in range(1, argc, 2):
@@ -123,14 +120,23 @@ if __name__ == '__main__':
             if argc < i + 1:
                 usage()
                 raise RuntimeError('Missing parameter: -k')
-            shingle_size = int(sys.argv[i + 1])
+
+            try:
+                shingle_size = int(sys.argv[i + 1])
+            except ValueError:
+                usage()
+                raise RuntimeError('-k should be an integer')
 
         elif sys.argv[i] == '-t':
             if argc < i + 1:
                 usage()
                 raise RuntimeError('Missing parameter: -t')
+            try:
+                threshold = float(sys.argv[i + 1])
+            except ValueError:
+                usage()
+                raise RuntimeError('-t should be a float value')
 
-            threshold = float(sys.argv[i + 1])
         elif sys.argv[i] == '-path':
             if argc < i + 1:
                 usage()
@@ -141,9 +147,19 @@ if __name__ == '__main__':
             if not os.path.isdir(path):
                 usage()
                 raise RuntimeError('Path is expected to be a folder with multiple documents')
+        elif sys.argv[i] == '-sig':
+            if argc < i + 1:
+                usage()
+                raise RuntimeError('Missing parameter: -sig')
+
+            try:
+                signature_size = int(sys.argv[i + 1])
+            except ValueError:
+                usage()
+                raise RuntimeError('-sig should be an integer')
 
         else:
             usage()
             raise RuntimeError('Unknown parameter {}'.format(sys.argv[i]))
 
-    main(path, shingle_size, threshold)
+    main(path, shingle_size, threshold, signature_size)
