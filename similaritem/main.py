@@ -6,7 +6,7 @@ import sys
 from similaritem import utils
 
 random.seed(1786)
-HASH_BUCKETS = 2147483647  # largest 32bit unsigned-integer prime
+HASH_BUCKETS = utils.L_MAX_32_BIT_INT  # largest 32bit unsigned-integer prime
 
 
 def usage():
