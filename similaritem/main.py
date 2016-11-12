@@ -112,8 +112,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     path = None
-    shingle_size = False
-    threshold = None
+    shingle_size = 9
+    threshold = 0.8
     path = None
 
     for i in range(1, argc, 2):
