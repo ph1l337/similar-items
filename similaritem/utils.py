@@ -94,6 +94,10 @@ def create_lsh_candidate_pairs(document_signatures, n_rows, n_bands, hash_bucket
     return candidate_pairs
 
 
+def compute_jaccard_simularity(set1, set2):
+    return float(len(set1.intersection(set2))) / len(set1.union(set2))
+
+
 def check_signature_similarity(candidate_pairs, document_signatures, threshold):
     similar_docs = []
     for candidate_pair in candidate_pairs:

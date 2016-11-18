@@ -2,6 +2,7 @@ import os
 import os.path
 import random
 import sys
+import time
 
 from similaritem import utils
 
@@ -11,7 +12,7 @@ HASH_BUCKETS = utils.L_MAX_32_BIT_INT  # largest 32bit unsigned-integer prime
 
 def usage():
     info = """
-    similaritem [-k shingle-size] [-t threshold] path
+    similaritem [-k shingle-size] [-t threshold] [-sig signature-size] path
     Where
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
@@ -22,23 +23,42 @@ def usage():
     print(info)
 
 
-def main(path, shingle_size=9, threshold=.8, signature_size=10):
+def main(path, shingle_size=9, threshold=.8, signature_size=100):
     files = (os.path.join(path, file) for file in os.listdir(path) if os.path.isfile(os.path.join(path, file)))
     documents_shingles = create_shingles_from_files(files, shingle_size)
     documents_shingles_hashes = hash_documents_shingles(documents_shingles, HASH_BUCKETS)
-    jaccard_similarities = compare_sets(documents_shingles_hashes)
-    print('The following jaccard similiarities between the k={k} k-shingles of all pairs of documents were found:\n'
-          .format(k=shingle_size) +
+
+    start = time.time()
+    jaccard_similarities = compare_sets_jaccard(documents_shingles_hashes)
+    end = time.time()
+    jaccard_time = end-start
+
+    print('The following jaccard similarities between the k={k} k-shingles of all pairs of documents were found in '+
+          '{duration} seconds:\n'
+          .format(k=shingle_size, duration=end - start) +
           '\n'.join('{doc_a} \t - {doc_b}: \t {jaccard_sim}'
                     .format(doc_a=pair[0][0], doc_b=pair[0][1], jaccard_sim=pair[1]) for pair in
                     jaccard_similarities))
 
     document_signatures = create_signatures_from_shingles(documents_shingles_hashes, signature_size)
-    n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
-    similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
+    start = time.time()
+    signature_similarities = compare_sets_signature(document_signatures)
+    end = time.time()
+    signatures_time = end - start
+    print('The following similarities of signatures between the n={n} sized signatures of all pairs of documents were'+
+          'found in {duration} seconds:\n'.format(n=signature_size, duration=signatures_time) +
+          '\n'.join('{doc_a} \t - {doc_b}: \t {sig_sim}'
+                    .format(doc_a=pair[0][0], doc_b=pair[0][1], sig_sim=pair[1]) for pair in
+                    signature_similarities))
 
-    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar:\n' \
-        .format(t=threshold)
+    n_bands, n_rows = utils.compute_index_measures(signature_size, threshold)
+    start = time.time()
+    similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
+    end = time.time()
+    lsh_time = end - start
+    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar in ' + \
+              '{duration} seconds :\n' \
+        .format(t=threshold, duration=lsh_time)
     if len(similar_docs) > 0:
         lsh_out += '\n'.join('{doc_a} \t - {doc_b}: \t {sim}'
                              .format(doc_a=lsh_pair[0][0], doc_b=lsh_pair[0][1], sim=lsh_pair[1]) for lsh_pair in
@@ -46,6 +66,11 @@ def main(path, shingle_size=9, threshold=.8, signature_size=10):
     else:
         lsh_out += 'None'
     print(lsh_out)
+
+    print('Summary for times: \n'
+          'Jaccard:\t{jaccard}\n'
+          'Signatures:\t{sig}\n'
+          'LSH:\t\t{lsh}'.format(jaccard=jaccard_time, sig=signatures_time, lsh=lsh_time))
 
 
 def hash_documents_shingles(documents, hash_buckets):
@@ -75,23 +100,31 @@ def create_shingles_from_files(files, shingle_size):
     return documents
 
 
-def compare_sets(documents_hashes):
+def compare_sets_jaccard(documents_hashes):
     keys = list(documents_hashes.keys())
     pairs = []
-    jaccard_similarities = []
     for i in range(len(keys)):
         for j in range(i + 1, len(keys)):
             pairs.append((keys[i], keys[j]))
 
+    jaccard_similarities = []
+
     for pair in pairs:
         jaccard_similarities.append(
-            (pair, compute_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
+            (pair, utils.compute_jaccard_simularity(documents_hashes[pair[0]], documents_hashes[pair[1]])))
 
     return jaccard_similarities
 
 
-def compute_jaccard_simularity(set1, set2):
-    return float(len(set1.intersection(set2))) / len(set1.union(set2))
+def compare_sets_signature(document_signatures):
+    keys = list(document_signatures.keys())
+    pairs = []
+
+    for i in range(len(keys)):
+        for j in range(i + 1, len(keys)):
+            pairs.append((keys[i], keys[j]))
+
+    return utils.check_signature_similarity(pairs, document_signatures, 0)
 
 
 def find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold):
