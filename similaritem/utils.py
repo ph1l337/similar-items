@@ -84,8 +84,10 @@ def create_lsh_candidate_pairs(document_signatures, n_rows, n_bands, hash_bucket
 
     for _, band in buckets_in_bands.items():
         for _, bucket in band.items():
-            for i in range(len(bucket)):
-                for j in range(i + 1, len(bucket)):
+
+            n = len(bucket)
+            for i in range(n):
+                for j in range(i + 1, n):
                     if bucket[i] < bucket[j]:
                         candidate_pairs.add((bucket[i], bucket[j]))
                     else:

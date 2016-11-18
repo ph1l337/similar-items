@@ -12,7 +12,7 @@ HASH_BUCKETS = utils.L_MAX_32_BIT_INT  # largest 32bit unsigned-integer prime
 
 def usage():
     info = """
-    similaritem [-k shingle-size] [-t threshold] [-sig signature-size] path
+    python similaritem.main [-k shingle-size] [-t threshold] [-sig signature-size] path
     Where
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
@@ -110,8 +110,10 @@ def create_shingles_from_files(files, shingle_size):
 def compare_sets_jaccard(documents_hashes):
     keys = list(documents_hashes.keys())
     pairs = []
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
+    n = len(keys)
+
+    for i in range(n):
+        for j in range(i + 1, n):
             pairs.append((keys[i], keys[j]))
 
     jaccard_similarities = []
@@ -127,8 +129,9 @@ def compare_sets_signature(document_signatures):
     keys = list(document_signatures.keys())
     pairs = []
 
-    for i in range(len(keys)):
-        for j in range(i + 1, len(keys)):
+    n = len(keys)
+    for i in range(n):
+        for j in range(i + 1, n):
             pairs.append((keys[i], keys[j]))
 
     return utils.check_signature_similarity(pairs, document_signatures, 0)
