@@ -13,7 +13,7 @@
     
 Note that the times reported don't include times for building signatures.
 Several runs have shown us that for a small amount of documents the run 
-time is `Signature < Jaccard < LSH`. With more documents this oder changes to
+time is `Signature < Jaccard < LSH`. With more documents this order changes to
 `LSH < Signature < Jaccard`.
 
 ## Design Choices for Sub tasks
@@ -50,6 +50,9 @@ are formed. Then each position of the signatures is compared against the other
 and checked if they are similar.
 
 ### Locality Sensitive Hashing
+For calculating the number of rows and band given a threshold we use the 
+method described in the book. Our code then generates candidates and then 
+checks the signature of the candidates.
 
 
 
