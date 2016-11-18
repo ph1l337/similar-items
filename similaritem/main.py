@@ -40,7 +40,11 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
                     .format(doc_a=pair[0][0], doc_b=pair[0][1], jaccard_sim=pair[1]) for pair in
                     jaccard_similarities))
 
+    start = time.time()
     document_signatures = create_signatures_from_shingles(documents_shingles_hashes, signature_size)
+    end = time.time()
+    building_signatures = end - start
+
     start = time.time()
     signature_similarities = compare_sets_signature(document_signatures)
     end = time.time()
@@ -70,7 +74,10 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     print('Summary for times: \n'
           'Jaccard:\t{jaccard}\n'
           'Signatures:\t{sig}\n'
-          'LSH:\t\t{lsh}'.format(jaccard=jaccard_time, sig=signatures_time, lsh=lsh_time))
+          'LSH:\t\t{lsh}\n'
+          '-------------------------------------\n'
+          'Building Signatures:\t{build_sig_time}'.format(jaccard=jaccard_time, build_sig_time=building_signatures, sig=signatures_time,
+                                   lsh=lsh_time))
 
 
 def hash_documents_shingles(documents, hash_buckets):
