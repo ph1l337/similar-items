@@ -61,3 +61,8 @@ While one could use the `hash` function in python, there is adverse behaviour be
 
 So, we resort to the `SHA256` function in the `hashlib` function. We extract the hash digest  a hexadecimal value, convert it to a base 10 integer, and use the first `2^31-1` bits.
 This ensures a more consistent behaviour accross interpreters.
+
+### Interpreters
+
+Program tested using CPython interpreter, and PyPy. For high performance, PyPy is recommended as the interpreter of choice.
+
