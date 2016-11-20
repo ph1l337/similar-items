@@ -12,7 +12,7 @@ HASH_BUCKETS = utils.L_MAX_32_BIT_INT  # largest 32bit unsigned-integer prime
 
 def usage():
     info = """
-    python similaritem.main [-k shingle-size] [-t threshold] [-sig signature-size] path
+    python similaritem.main [-k shingle-size] [-t threshold] [-sig signature-size] -path
     Where
         - path: is a path to a file or directory containing text documents
         - k   : is the size of the shingles. Defaults to 9
@@ -33,7 +33,8 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     end = time.time()
     jaccard_time = end - start
 
-    print('The following jaccard similarities between the k={k} k-shingles of all pairs of documents were found in ' +
+    print('The following jaccard similarities between the k={k} '.format(k=shingle_size) +
+          'k-shingles of all pairs of documents were found in ' +
           '{duration} seconds:\n'
           .format(k=shingle_size, duration=end - start) +
           '\n'.join('{doc_a} \t - {doc_b}: \t {jaccard_sim}'
@@ -49,8 +50,9 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     signature_similarities = compare_sets_signature(document_signatures)
     end = time.time()
     signatures_time = end - start
-    print('The following similarities of signatures between the n={n} sized signatures of all pairs of documents were' +
-          'found in {duration} seconds:\n'.format(n=signature_size, duration=signatures_time) +
+    print('The following similarities of signatures between the '
+          'n={n} sized signatures of all pairs of documents were'.format(n=signature_size) +
+          'found in {duration} seconds:\n'.format(duration=signatures_time) +
           '\n'.join('{doc_a} \t - {doc_b}: \t {sig_sim}'
                     .format(doc_a=pair[0][0], doc_b=pair[0][1], sig_sim=pair[1]) for pair in
                     signature_similarities))
@@ -60,9 +62,9 @@ def main(path, shingle_size=9, threshold=.8, signature_size=100):
     similar_docs = find_similar_docs_using_lsh(document_signatures, n_rows, n_bands, threshold)
     end = time.time()
     lsh_time = end - start
-    lsh_out = 'Using LSH with a threshold of {t} the following document pairs were found to be similar in ' + \
-              '{duration} seconds :\n' \
-                  .format(t=threshold, duration=lsh_time)
+    lsh_out = 'Using LSH with a threshold of {t} the following '.format(t=threshold) +\
+              'document pairs were found to be similar in ' +\
+              '{duration} seconds :\n'.format(duration=lsh_time)
     if len(similar_docs) > 0:
         lsh_out += '\n'.join('{doc_a} \t - {doc_b}: \t {sim}'
                              .format(doc_a=lsh_pair[0][0], doc_b=lsh_pair[0][1], sim=lsh_pair[1]) for lsh_pair in
